@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ExamFlow — Student Examination & Assessment Portal</title>
+  <meta name="description" content="Modern, clean, and intuitive online examination processing platform with authenticated student portals and automated evaluation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ================= AUTH GATE / LOGIN SCREEN ================= -->
+  <div id="auth-screen" class="auth-screen-overlay">
+    <div class="auth-box">
+      
+      <!-- Brand Logo in Auth -->
+      <div class="auth-brand-center">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-name">ExamFlow</h1>
+          <p class="brand-sub">Examination & Processing Portal</p>
+        </div>
+      </div>
+
+      <!-- Auth Tabs: Login vs Sign Up -->
+      <div class="auth-tabs-row">
+        <button class="auth-tab active" id="auth-tab-btn-login" onclick="toggleAuthMode('login')">
+          🔐 Student Login
+        </button>
+        <button class="auth-tab" id="auth-tab-btn-signup" onclick="toggleAuthMode('signup')">
+          ✍️ New Registration
+        </button>
+      </div>
+
+      <!-- Alert / Error message container -->
+      <div id="auth-alert" class="auth-alert-box" style="display: none;"></div>
+
+      <!-- FORM 1: LOGIN -->
+      <form id="form-login" class="auth-form-panel" onsubmit="handleLoginSubmit(event)">
+        <div class="form-group mb-3">
+          <label for="login-username">Student Name or Roll Number:</label>
+          <input type="text" id="login-username" class="input-control" placeholder="e.g. Rajdeep Dey or CS-2026-001" required>
+          <span class="input-hint">Case-insensitive (e.g. "rajdeep dey", "Rajdeep", or "CS-2026-001")</span>
+        </div>
+
+        <div class="form-group mb-4">
+          <label for="login-password">Password:</label>
+          <input type="password" id="login-password" class="input-control" placeholder="e.g. rajdeep123" required>
+          <span class="input-hint">Default format is <strong>name123</strong> (e.g. rajdeep123, rahul123)</span>
+        </div>
+
+        <button type="submit" id="btn-login-submit" class="btn btn-primary btn-block btn-lg">
+          <span>Log In to ExamFlow</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+
+      <!-- FORM 2: SIGN UP -->
+      <form id="form-signup" class="auth-form-panel" style="display: none;" onsubmit="handleSignupSubmit(event)">
+        <div class="form-group mb-3">
+          <label for="signup-name">Candidate Full Name <span class="required">*</span></label>
+          <input type="text" id="signup-name" class="input-control" placeholder="e.g. Rajdeep Dey" required>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="signup-roll">Roll / Registration Number:</label>
+          <input type="text" id="signup-roll" class="input-control" placeholder="e.g. CS-2026-042 (Auto-generated if blank)">
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="signup-branch">Branch / Specialization:</label>
+          <input type="text" id="signup-branch" class="input-control" placeholder="e.g. Computer Science & Engineering" value="Computer Science & Engineering">
+        </div>
+
+        <div class="form-group mb-4">
+          <label for="signup-password">Choose Password (Optional):</label>
+          <input type="password" id="signup-password" class="input-control" placeholder="Leave empty for default (name123)">
+          <span class="input-hint">If left empty, your password will automatically be <strong>firstname123</strong></span>
+        </div>
+
+        <button type="submit" id="btn-signup-submit" class="btn btn-primary btn-block btn-lg">
+          <span>Create Student Account</span>
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+      </form>
+
+      <!-- Demo Accounts Accordion / Quick Login Helper -->
+      <div class="demo-logins-box mt-4">
+        <div class="demo-logins-header" onclick="toggleDemoAccounts()">
+          <span>💡 <strong>10 Demo Student Accounts</strong> (Click to view & autofill)</span>
+          <span id="demo-arrow">▼</span>
+        </div>
+
+        <div id="demo-accounts-list" class="demo-accounts-list" style="display: none;">
+          <!-- Dynamically populated from API with quick autofill -->
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ================= TOP NAVIGATION HEADER ================= -->
+  <header class="app-header" id="main-header" style="display: none;">
+    <div class="header-container">
+      
+      <!-- Brand Logo -->
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2.3">
+            <path d="M9 11l3 3L22 4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-name">ExamFlow</h1>
+          <p class="brand-sub">Examination & Processing Portal</p>
+        </div>
+      </div>
+
+      <!-- Navigation Tabs -->
+      <nav class="nav-tabs" role="tablist">
+        <button class="tab-btn active" id="tab-nav-dashboard" onclick="switchView('dashboard')">
+          <span class="tab-icon">🏠</span> Dashboard
+        </button>
+        <button class="tab-btn" id="tab-nav-exams" onclick="switchView('exams')">
+          <span class="tab-icon">📝</span> Exams & Mocks
+        </button>
+        <button class="tab-btn" id="tab-nav-results" onclick="switchView('results')">
+          <span class="tab-icon">📜</span> Past Results
+        </button>
+        <button class="tab-btn" id="tab-nav-leaderboard" onclick="switchView('leaderboard')">
+          <span class="tab-icon">🏆</span> Leaderboard
+        </button>
+        <button class="tab-btn" id="tab-nav-faculty" onclick="switchView('faculty')">
+          <span class="tab-icon">⚙️</span> Faculty View
+        </button>
+      </nav>
+
+      <!-- Student Profile Badge & Menu -->
+      <div class="profile-menu-container">
+        <div class="student-profile-pill" onclick="toggleProfileDropdown()">
+          <span class="profile-avatar" id="current-user-avatar">👨‍🎓</span>
+          <div class="profile-text">
+            <span class="profile-name" id="current-user-name">Rajdeep Dey</span>
+            <span class="profile-roll" id="current-user-roll">CS-2026-001</span>
+          </div>
+          <span class="profile-switch-arrow">▼</span>
+        </div>
+
+        <!-- Profile Dropdown Menu -->
+        <div id="profile-dropdown" class="profile-dropdown-menu" style="display: none;">
+          <div class="dropdown-header">
+            <strong id="dropdown-user-name">Rajdeep Dey</strong>
+            <span id="dropdown-user-email">rajdeep.dey@university.edu</span>
+          </div>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item" onclick="openChangePasswordModal()">
+            <span>🔑 Change Password</span>
+          </button>
+          <button class="dropdown-item" onclick="logoutStudent()">
+            <span class="text-danger">🚪 Log Out</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= MAIN CONTENT VIEW AREA ================= -->
+  <main class="main-content" id="main-content-area" style="display: none;">
+
+    <!-- VIEW 1: STUDENT DASHBOARD -->
+    <section id="view-dashboard" class="content-view active">
+      <div class="view-container">
+
+        <!-- Welcome Banner -->
+        <div class="welcome-card mb-4">
+          <div class="welcome-left">
+            <span class="welcome-pill">Academic Semester 4 • CSE</span>
+            <h2 class="welcome-title">Welcome back, <span id="dash-greeting-name">Rajdeep</span>! 👋</h2>
+            <p class="welcome-desc">
+              Your overall consistency rating is currently <strong class="text-emerald" id="dash-consistency-label">97%</strong>. You are ranked <strong class="text-primary" id="dash-rank-label">#1</strong> in your class. Keep up the high standard!
+            </p>
+            <div class="welcome-cta-row mt-3">
+              <button class="btn btn-primary" onclick="switchView('exams')">Browse Available Exams</button>
+              <button class="btn btn-outline" onclick="switchView('results')">Check Past Scores</button>
+            </div>
+          </div>
+          <div class="welcome-right-badge">
+            <div class="consistency-circle">
+              <span class="circle-number" id="dash-consistency-circle">97%</span>
+              <span class="circle-label">Consistency</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 4 Key Performance Stats -->
+        <div class="stats-grid mb-4">
+          <div class="stat-card">
+            <div class="stat-icon-box icon-purple">🏆</div>
+            <div>
+              <div class="stat-card-title">Class Rank</div>
+              <div class="stat-card-val text-purple" id="stat-class-rank">#1 <span class="stat-card-sub">/ 10 Students</span></div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-emerald">📊</div>
+            <div>
+              <div class="stat-card-title">Average Score</div>
+              <div class="stat-card-val text-emerald" id="stat-avg-score">100%</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-blue">✍️</div>
+            <div>
+              <div class="stat-card-title">Exams Completed</div>
+              <div class="stat-card-val text-primary" id="stat-completed-count">2 Tests</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-amber">🔥</div>
+            <div>
+              <div class="stat-card-title">Consistency Rating</div>
+              <div class="stat-card-val text-amber" id="stat-consistency">97%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dashboard Two-Column Layout -->
+        <div class="dashboard-columns">
+          
+          <!-- Left Column: Quick Launch Available Exams -->
+          <div class="dash-col-main">
+            <div class="content-card mb-4">
+              <div class="card-title-row mb-3">
+                <h3 class="card-heading">Available Tests Ready to Attempt</h3>
+                <button class="btn-link" onclick="switchView('exams')">View All →</button>
+              </div>
+
+              <div class="quick-exams-list" id="dash-quick-exams">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Recent Past Results -->
+            <div class="content-card">
+              <div class="card-title-row mb-3">
+                <h3 class="card-heading">Your Recent Exam Submissions</h3>
+                <button class="btn-link" onclick="switchView('results')">All Results →</button>
+              </div>
+
+              <div class="recent-results-list" id="dash-recent-results">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Right Column: Top Scorers Leaderboard Mini-Widget -->
+          <div class="dash-col-side">
+            <div class="content-card">
+              <div class="card-title-row mb-3">
+                <h3 class="card-heading">Top Scorers (Class Top 5)</h3>
+                <button class="btn-link" onclick="switchView('leaderboard')">Full Board →</button>
+              </div>
+
+              <div class="leaderboard-mini-list" id="dash-top-scorers">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+            <!-- Upcoming Exams Alert Card -->
+            <div class="content-card mt-4 upcoming-alert-card">
+              <div class="alert-icon">📅</div>
+              <div>
+                <h4 class="alert-title">Upcoming Exam Alert</h4>
+                <p class="alert-text"><strong>CS304: Operating Systems & Concurrency</strong> is scheduled for tomorrow at 10:00 AM IST.</p>
+                <button class="btn btn-sm btn-secondary mt-2" onclick="switchView('exams')">View Schedule</button>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 2: EXAMS & MOCK TESTS -->
+    <section id="view-exams" class="content-view">
+      <div class="view-container">
+
+        <div class="view-header-row mb-4">
+          <div>
+            <h2 class="view-heading">Examinations & Mock Tests</h2>
+            <p class="view-subtitle">Select an active exam or practice with an unlimited mock test</p>
+          </div>
+          <div class="filter-pills" id="exam-filter-pills">
+            <button class="filter-pill active" onclick="filterExams('all')">All Tests</button>
+            <button class="filter-pill" onclick="filterExams('active')">🟢 Active Exams</button>
+            <button class="filter-pill" onclick="filterExams('mock')">🟣 Practice Mocks</button>
+            <button class="filter-pill" onclick="filterExams('upcoming')">🟡 Upcoming</button>
+          </div>
+        </div>
+
+        <!-- Exams Grid -->
+        <div class="exams-grid" id="exams-grid-container">
+          <!-- Dynamically populated cards -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 3: PAST RESULTS & ANSWER SHEET -->
+    <section id="view-results" class="content-view">
+      <div class="view-container">
+
+        <div class="view-header-row mb-4">
+          <div>
+            <h2 class="view-heading">Your Past Examination Results</h2>
+            <p class="view-subtitle">Review previous attempts, breakdown of marks, and verified answer keys</p>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Submission ID</th>
+                  <th>Exam Title</th>
+                  <th>Category</th>
+                  <th>Date Attempted</th>
+                  <th>Time Taken</th>
+                  <th>Score</th>
+                  <th>Percentage</th>
+                  <th>Status</th>
+                  <th>Answer Sheet</th>
+                </tr>
+              </thead>
+              <tbody id="student-results-tbody">
+                <tr>
+                  <td colspan="9" class="text-center py-4 text-muted">Loading results...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 4: LEADERBOARD & RANKINGS -->
+    <section id="view-leaderboard" class="content-view">
+      <div class="view-container">
+
+        <div class="view-header-row mb-4">
+          <div>
+            <h2 class="view-heading">Class Leaderboard & Rankings</h2>
+            <p class="view-subtitle">Performance rankings based on average examination scores and consistency ratings</p>
+          </div>
+        </div>
+
+        <div class="content-card">
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Rank</th>
+                  <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Branch</th>
+                  <th>Tests Attempted</th>
+                  <th>Average Score</th>
+                  <th>Consistency Rating</th>
+                  <th>Performance Tier</th>
+                </tr>
+              </thead>
+              <tbody id="leaderboard-tbody">
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-muted">Loading leaderboard...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 5: FACULTY / ADMIN VIEW -->
+    <section id="view-faculty" class="content-view">
+      <div class="view-container">
+
+        <div class="view-header-row mb-4">
+          <div>
+            <h2 class="view-heading">Faculty & Administration Processing Portal</h2>
+            <p class="view-subtitle">Institution-wide evaluation statistics, batch submission processing, and student records</p>
+          </div>
+          <div class="header-action-btns">
+            <button class="btn btn-primary" onclick="simulateBatchInFaculty()">
+              ⚡ Simulate Batch Processing (All 10 Students)
+            </button>
+          </div>
+        </div>
+
+        <!-- Faculty Stats -->
+        <div class="stats-grid mb-4">
+          <div class="stat-card">
+            <div class="stat-icon-box icon-blue">🏫</div>
+            <div>
+              <div class="stat-card-title">Total Submissions Processed</div>
+              <div class="stat-card-val text-primary" id="fac-total-subs">0</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-emerald">👥</div>
+            <div>
+              <div class="stat-card-title">Enrolled Students</div>
+              <div class="stat-card-val text-emerald" id="fac-total-students">10</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-purple">🎯</div>
+            <div>
+              <div class="stat-card-title">Institution Average Score</div>
+              <div class="stat-card-val text-purple" id="fac-avg-score">0 / 100</div>
+            </div>
+          </div>
+
+          <div class="stat-card">
+            <div class="stat-icon-box icon-amber">📈</div>
+            <div>
+              <div class="stat-card-title">Overall Pass Rate</div>
+              <div class="stat-card-val text-amber" id="fac-pass-rate">0%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Master Submissions Ledger -->
+        <div class="content-card">
+          <div class="card-title-row mb-3">
+            <h3 class="card-heading">Master Submissions Ledger</h3>
+            <span class="badge badge-light" id="fac-ledger-badge">0 Submissions</span>
+          </div>
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Submission ID</th>
+                  <th>Student Name</th>
+                  <th>Roll Number</th>
+                  <th>Exam Title</th>
+                  <th>Score</th>
+                  <th>Percentage</th>
+                  <th>Result</th>
+                  <th>Submitted At</th>
+                </tr>
+              </thead>
+              <tbody id="faculty-submissions-tbody">
+                <tr>
+                  <td colspan="8" class="text-center py-4 text-muted">Loading submissions ledger...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 6: ACTIVE EXAM ROOM -->
+    <section id="view-exam-room" class="content-view">
+      <div class="view-container-narrow">
+
+        <!-- Active Exam Header -->
+        <div class="exam-room-header content-card mb-4">
+          <div class="exam-room-meta">
+            <span class="badge badge-primary" id="room-exam-code">CS301</span>
+            <div>
+              <h3 class="exam-room-title" id="room-exam-title">Computer Architecture Assessment</h3>
+              <p class="exam-room-sub" id="room-student-info">Candidate: Rajdeep Dey (CS-2026-001)</p>
+            </div>
+          </div>
+          <div class="exam-room-timer-box">
+            <span class="timer-label">Time Remaining</span>
+            <div class="timer-digits" id="room-timer-digits">14:59</div>
+          </div>
+        </div>
+
+        <!-- Question Navigation Bubbles -->
+        <div class="question-nav-strip content-card mb-4" id="room-question-nav-strip">
+          <!-- Q1, Q2, Q3 bubbles -->
+        </div>
+
+        <!-- Questions List Container -->
+        <div id="room-questions-container">
+          <!-- Dynamically populated cards -->
+        </div>
+
+        <!-- Exam Bottom Submit Bar -->
+        <div class="exam-submit-bar content-card mt-4">
+          <div class="exam-status-text">
+            <span id="room-answered-count">0 of 5 Answered</span>
+          </div>
+          <div class="exam-submit-actions">
+            <button class="btn btn-outline" onclick="cancelExamAttempt()">Exit Exam</button>
+            <button class="btn btn-primary btn-lg" id="btn-submit-active-exam" onclick="submitActiveExam()">
+              Submit & Process Exam
+            </button>
+          </div>
+        </div>
+
+        <!-- Result Box (Hidden by default, shown after submit) -->
+        <div id="room-result-box" class="content-card mt-4 room-result-box" style="display: none;">
+          <div class="result-celebration-top">
+            <div class="result-badge-pill" id="room-res-badge">Passed 🎉</div>
+            <h2 class="result-heading" id="room-res-heading">Exam Successfully Processed!</h2>
+            <p class="result-subtext" id="room-res-subtext">Your answers have been graded automatically by the backend system.</p>
+          </div>
+
+          <div class="score-summary-grid">
+            <div class="score-tile">
+              <div class="score-tile-label">Final Score</div>
+              <div class="score-tile-val text-primary" id="room-res-score">100 / 100</div>
+            </div>
+            <div class="score-tile">
+              <div class="score-tile-label">Percentage</div>
+              <div class="score-tile-val text-emerald" id="room-res-percentage">100%</div>
+            </div>
+            <div class="score-tile">
+              <div class="score-tile-label">Result Status</div>
+              <div class="score-tile-val text-emerald" id="room-res-status">PASSED</div>
+            </div>
+          </div>
+
+          <!-- Answer Key & Detailed Review -->
+          <div class="review-accordion-box">
+            <h4 class="review-box-title">Detailed Question Review & Explanations</h4>
+            <div id="room-res-breakdown-list" class="review-breakdown-list"></div>
+          </div>
+
+          <div class="room-result-cta-row mt-4">
+            <button class="btn btn-outline" onclick="switchView('dashboard')">Back to Dashboard</button>
+            <button class="btn btn-primary" onclick="switchView('results')">View in Past Results</button>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ================= MODAL: CHANGE PASSWORD ================= -->
+  <div class="modal-overlay" id="change-password-modal" onclick="closeChangePasswordModalOnOutside(event)">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 class="modal-title">🔑 Change Password</h3>
+        <button class="modal-close-btn" onclick="closeChangePasswordModal()">✕</button>
+      </div>
+
+      <p class="modal-subtitle">Update your password to secure your student portal account:</p>
+
+      <div id="pwd-modal-alert" class="auth-alert-box" style="display: none;"></div>
+
+      <form id="change-password-form" onsubmit="handleChangePasswordSubmit(event)">
+        <div class="form-group mb-3">
+          <label for="pwd-current">Current Password:</label>
+          <input type="password" id="pwd-current" class="input-control" placeholder="Enter current password" required>
+        </div>
+
+        <div class="form-group mb-3">
+          <label for="pwd-new">New Password:</label>
+          <input type="password" id="pwd-new" class="input-control" placeholder="Minimum 4 characters" minlength="4" required>
+        </div>
+
+        <div class="form-group mb-4">
+          <label for="pwd-confirm">Confirm New Password:</label>
+          <input type="password" id="pwd-confirm" class="input-control" placeholder="Re-type new password" required>
+        </div>
+
+        <div class="modal-actions-row">
+          <button type="button" class="btn btn-outline" onclick="closeChangePasswordModal()">Cancel</button>
+          <button type="submit" id="btn-save-new-pwd" class="btn btn-primary">Update Password</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ================= MODAL: DETAILED ANSWER SHEET REVIEW ================= -->
+  <div class="modal-overlay" id="review-modal" onclick="closeReviewModalOnOutside(event)">
+    <div class="modal-card modal-card-lg">
+      <div class="modal-header">
+        <div>
+          <h3 class="modal-title" id="review-modal-title">Examination Answer Sheet Review</h3>
+          <p class="modal-subtitle" id="review-modal-meta">Submission ID: SUB-XXXX • Student: Rajdeep Dey</p>
+        </div>
+        <button class="modal-close-btn" onclick="closeReviewModal()">✕</button>
+      </div>
+
+      <div class="modal-score-summary mb-3">
+        <span class="badge badge-primary" id="review-modal-score">Score: 100 / 100</span>
+        <span class="badge badge-success" id="review-modal-status">Passed</span>
+        <span class="badge badge-light" id="review-modal-time">Time Taken: 8m 15s</span>
+      </div>
+
+      <div class="review-modal-body" id="review-modal-questions-list">
+        <!-- Questions & Explanations rendered here -->
+      </div>
+
+      <div class="modal-footer mt-3">
+        <button class="btn btn-secondary" onclick="closeReviewModal()">Close Review</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="app-footer" id="main-footer" style="display: none;">
+    <div class="footer-container">
+      <div><strong>ExamFlow</strong> — Student Examination & Assessment Portal</div>
+      <div class="footer-links">
+        <span>Student Auth & Privacy</span> • <span>Mock Tests</span> • <span>Automated Evaluation</span> • <span>Class Leaderboard</span>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/app.js"></script>
+</body>
+</html>
